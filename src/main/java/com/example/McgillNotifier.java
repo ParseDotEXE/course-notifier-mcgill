@@ -1,8 +1,5 @@
 package com.example;
 
-public class McgillNotifier {
+public class McGillNotifier {
     //hello world
-    public static void main(String[] args) {
-        System.out.println("Hello, McGill Notifier!");
-    }
 }
