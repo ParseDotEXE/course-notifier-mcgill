@@ -5,6 +5,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.net.URI;
 import java.io.IOException;
 import java.io.StringReader;
@@ -21,28 +23,18 @@ public class McGillCourseChecker {
     
     // Method to check course availability
     public CourseInfo checkCourseAvailability(String term, String courseCode) throws IOException, InterruptedException {
-        // 1. Build URL with parameters
-        String url = buildUrl(term, courseCode);
-        // 2. Make HTTP GET request
-        HttpClient client = HttpClient.newHttpClient(); //make new client instance
-        // Set up the request with headers and parameters
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Accept", "application/xml")
-                .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());//send the request and get the response
-        
-        //check response status
-        if(response.statusCode() != 200){
-            throw new IOException("Failed to fetch course data. Status: " + response.statusCode());
-        }
-        // 3. Parse XML response
+        // 1. Create HTTP client with cookie support
+        CookieManager cookieManager = new CookieManager(); //new CookieManager instance
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL); //accept all cookies
+        // 2. visit the main VSB page to make session and set cookies
+        // 3. make API call to get course data
+        // 4. Parse XML response
         Document doc = parseXmlResponse(response.body()); //parse the XML response
         // Check if the response contains valid data
         if (doc == null) {
             throw new IOException("Invalid XML response from server.");
         }  
-        // 4. Extract and return course info (including all sections)
+        // 5. Extract and return course info (including all sections)
         
     }
     // Helper method to parse XML response
