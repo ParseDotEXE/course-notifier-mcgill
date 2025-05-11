@@ -118,6 +118,32 @@ mcgill-vsb-notifier/
 | (Notifications)|      | (External)        |
 +----------------+      +-------------------+
 ```
+## Dependency Flow
+
+1- McGillNotifier depends on:
+   - McGillCourseChecker for course data
+   - TwilioNotifier for sending notifications
+   - Config for settings (optional)
+
+2- McGillCourseChecker depends on:
+   - VSB Website API (external)
+   - Inner classes (CourseInfo, SectionInfo) as data models
+
+
+3- TwilioNotifier depends on:
+   - Twilio API (external)
+   - Notification settings from Config or main class
+
+
+
+## Data Flow
+
+1- McGillNotifier gets configuration (term, course, CRN)
+2- McGillCourseChecker retrieves course data from VSB
+3- McGillCourseChecker parses and returns structured data
+4- McGillNotifier checks availability against criteria
+5- If seats available, TwilioNotifier sends SMS
+
 ## 🧩 Code Examples
 
 ### VSB API Call
