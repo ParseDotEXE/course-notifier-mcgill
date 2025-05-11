@@ -57,8 +57,21 @@ public class McGillCourseChecker {
     // Helper method to build the URL with parameters
     private String buildUrl(String term, String courseCode) {
         // Format course code (e.g., "MATH 240" -> "MATH-240")
+        String formattedCourseCode = courseCode.replace(" ", "-");
+
         // Add all required parameters
+        StringBuilder urlBuilder = new StringBuilder(API_URL);
+        urlBuilder.append("?term=").append(term);
+        urlBuilder.append("&course_0_0=").append(formattedCourseCode);
+        urlBuilder.append("&rq_0_0=");  // Empty parameter but required
+        urlBuilder.append("&t=82");     // These seem to be constants
+        urlBuilder.append("&e=45");     // from your analysis
+        urlBuilder.append("&nouser=1");
+        
         // Include current timestamp
+        long timestamp = System.currentTimeMillis();
+        urlBuilder.append("&_=").append(timestamp);
+        return urlBuilder.toString()
     }
     
     // Helper method to extract all sections info from Document
