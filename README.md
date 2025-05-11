@@ -138,11 +138,11 @@ mcgill-vsb-notifier/
 
 ## Data Flow
 
-1- McGillNotifier gets configuration (term, course, CRN)
-2- McGillCourseChecker retrieves course data from VSB
-3- McGillCourseChecker parses and returns structured data
-4- McGillNotifier checks availability against criteria
-5- If seats available, TwilioNotifier sends SMS
+   1- McGillNotifier gets configuration (term, course, CRN)
+   2- McGillCourseChecker retrieves course data from VSB
+   3- McGillCourseChecker parses and returns structured data
+   4- McGillNotifier checks availability against criteria
+   5- If seats available, TwilioNotifier sends SMS
 
 ## 🧩 Code Examples
 
