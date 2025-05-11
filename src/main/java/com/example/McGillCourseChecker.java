@@ -61,8 +61,8 @@ public class McGillCourseChecker {
 
         // Add all required parameters
         StringBuilder urlBuilder = new StringBuilder(API_URL);
-        urlBuilder.append("?term=").append(term);
-        urlBuilder.append("&course_0_0=").append(formattedCourseCode);
+        urlBuilder.append("?term=").append(term); //add term parameter (required)
+        urlBuilder.append("&course_0_0=").append(formattedCourseCode); //add course code parameter (required)
         urlBuilder.append("&rq_0_0=");  // Empty parameter but required
         urlBuilder.append("&t=82");     // These seem to be constants
         urlBuilder.append("&e=45");     // from your analysis
@@ -71,12 +71,13 @@ public class McGillCourseChecker {
         // Include current timestamp
         long timestamp = System.currentTimeMillis();
         urlBuilder.append("&_=").append(timestamp);
-        return urlBuilder.toString()
+        return urlBuilder.toString();
     }
     
     // Helper method to extract all sections info from Document
     private CourseInfo extractCourseInfo(Document doc) {
         // Find all block elements
+        NodeList blocks = doc.getElementsByTagName("block")
         // Extract info for each section
         // Return CourseInfo object with all sections
     }
