@@ -99,7 +99,25 @@ mcgill-vsb-notifier/
 ├── pom.xml                                        # Maven dependencies
 └── README.md                                      # Project documentation
 ```
-
+## Interactions & Dependencies
+```
++----------------+      +-------------------+      +----------------+
+| McGillNotifier |----->| McGillCourseChecker |----->| VSB Website API |
+| (Main Class)   |      | (Data Retrieval)   |      | (External)     |
++----------------+      +-------------------+      +----------------+
+        |                        |
+        v                        v
++----------------+      +-------------------+
+| Config         |      | CourseInfo        |
+| (Optional)     |      | (Data Model)      |
++----------------+      +-------------------+
+        |
+        v
++----------------+      +-------------------+
+| TwilioNotifier |----->| Twilio API        |
+| (Notifications)|      | (External)        |
++----------------+      +-------------------+
+```
 ## 🧩 Code Examples
 
 ### VSB API Call
