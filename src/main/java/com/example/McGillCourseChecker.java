@@ -99,19 +99,58 @@ public class McGillCourseChecker {
     
     // Helper method to extract all sections info from Document
     private CourseInfo extractCourseInfo(Document doc) {
-        // For now, just return a new CourseInfo object to test
         CourseInfo courseInfo = new CourseInfo();
-        // TODO: Actually extract data from the document
+        List<SectionInfo> sections = new ArrayList<>();
+    
+        // 1. Extract course-level information
+        // Get course name from <offering> element
+        NodeList offeringNodes = doc.getElementsByTagName("offering");
+        if(offeringNodes.getLength() > 0) {
+            Element offeringElement = (Element) offeringNodes.item(0);
+            String courseTitle = offeringElement.getAttribute("title");
+            String courseDesc = offeringElement.getAttribute("desc");
+
+            //set course title and description in CourseInfo
+            courseInfo.setCourseCode(courseTitle);
+            courseInfo.setCourseName(courseDesc);
+        }
+        //The rest is TODO:
+        // Get course code from <course> element
+    
+        // 2. Extract all sections
+        // Find all <block> elements
+        // For each block, create a SectionInfo object
+        // Extract all the attributes mentioned above
+    
+        // 3. Set the data and return
+        courseInfo.setSections(sections);
         return courseInfo;
     }
     
     // Inner class to hold course information
     public static class CourseInfo {
         private String courseName;
+        private String courseCode;
         private List<SectionInfo> sections;
     
         public CourseInfo() {
             this.sections = new ArrayList<>();
+        }
+
+        public String getCourseCode() {
+            return courseCode;
+        }
+
+        public void setCourseCode(String courseCode) {
+            this.courseCode = courseCode;
+        }
+
+        public String getCourseName() {
+            return courseName;
+        }
+
+        public void setCourseName(String courseName) {
+            this.courseName = courseName;
         }
         // getters/setters
     }
