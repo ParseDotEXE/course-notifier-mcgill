@@ -78,45 +78,77 @@ This application helps McGill students get notified when spots open up in full c
 ```
 mcgill-vsb-notifier/
 ├── src/
-│   └── main/
-│       └── java/
-│           ├── com/
-│               └── vsbnotifier/
-│                   ├── Main.java                  # Application entry point
-│                   ├── config/
-│                   │   └── ConfigLoader.java      # Loads configuration
-│                   ├── service/
-│                   │   ├── VSBService.java        # Handles VSB API calls
-│                   │   └── NotificationService.java # Handles Twilio API calls
-│                   ├── model/
-│                   │   ├── Course.java            # Course data model
-│                   │   └── SeatAvailability.java  # Availability data model
-│                   └── util/
-│                       └── XMLParser.java         # Parses VSB XML responses
-├── resources/
-│   ├── config.properties.example                  # Example configuration
-│   └── log4j2.xml                                 # Logging configuration
-├── pom.xml                                        # Maven dependencies
-└── README.md                                      # Project documentation
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── vsbnotifier/
+│   │   │           ├── main/
+│   │   │           │   └── McGillNotifier.java     # Main service
+│   │   │           ├── config/
+│   │   │           │   └── ConfigLoader.java       # Loads app config
+│   │   │           ├── service/
+│   │   │           │   ├── McGillCourseChecker.java # VSB data retrieval
+│   │   │           │   ├── TwilioNotifier.java     # SMS notifications
+│   │   │           │   └── GoogleSheetReader.java  # NEW: Reads form responses
+│   │   │           └── model/
+│   │   │               ├── CourseInfo.java         # Course data
+│   │   │               ├── SectionInfo.java        # Section data
+│   │   │               └── UserRequest.java        # NEW: Stores user requests
+│   │   └── resources/
+│   │       └── config.properties                   # App-level config
+└── pom.xml                                         # Dependencies
 ```
 ## Interactions & Dependencies
 ```
-+----------------+      +-------------------+      +----------------+
-| McGillNotifier |----->| McGillCourseChecker |----->| VSB Website API |
-| (Main Class)   |      | (Data Retrieval)   |      | (External)     |
-+----------------+      +-------------------+      +----------------+
-        |                        |
-        v                        v
-+----------------+      +-------------------+
-| Config         |      | CourseInfo        |
-| (Optional)     |      | (Data Model)      |
-+----------------+      +-------------------+
++----------------------+      +-------------------+
+| QR Code             |----->| Google Form       |
+| (Links to Form)     |      | (User Input)      |
++----------------------+      +-------------------+
+                                       |
+                                       v
+                              +-------------------+
+                              | Google Sheet      |
+                              | (Stores Responses)|
+                              +-------------------+
+                                       |
+                                       v
++----------------------+      +-------------------+
+| McGillNotifier       |<---->| GoogleSheetReader |
+| (Main Class)         |      | (Reads Responses) |
++----------------------+      +-------------------+
+        |                             |
+        |                             v
+        |                    +-------------------+
+        |                    | UserRequest       |
+        |                    | (Request Model)   |
+        |                    +-------------------+
         |
-        v
-+----------------+      +-------------------+
-| TwilioNotifier |----->| Twilio API        |
-| (Notifications)|      | (External)        |
-+----------------+      +-------------------+
+        |    +-------------------+      +-------------------+
+        +--->| ConfigLoader      |----->| config.properties |
+        |    | (App Settings)    |      | (App Config)      |
+        |    +-------------------+      +-------------------+
+        |
+        |    +-------------------+      +-------------------+
+        +--->| McGillCourseChecker |-->| VSB Website API    |
+        |    | (Course Data)      |    | (External)         |
+        |    +-------------------+      +-------------------+
+        |              |
+        |              v
+        |    +-------------------+
+        |    | CourseInfo        |
+        |    | (Course Model)    |
+        |    +-------------------+
+        |              |
+        |              v
+        |    +-------------------+
+        |    | SectionInfo       |
+        |    | (Section Model)   |
+        |    +-------------------+
+        |
+        |    +-------------------+      +-------------------+
+        +--->| TwilioNotifier    |----->| Twilio API        |
+             | (SMS Notifications)|     | (External)        |
+             +-------------------+      +-------------------+
 ```
 ## Dependency Flow
 
