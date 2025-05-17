@@ -20,7 +20,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -80,7 +79,6 @@ public class GoogleSheetReader {
                 if(row.size() >= 4){
                     try{
                         //map each column to the UserRequest object
-                        String timeStamp = row.get(0).toString().trim();
                         String phoneNumber = row.get(1).toString().trim();
                         String term = row.get(2).toString().trim();
                         String courseCode = row.get(3).toString().trim();
