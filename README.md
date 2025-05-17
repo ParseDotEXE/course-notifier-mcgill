@@ -78,70 +78,97 @@ This application helps McGill students get notified when spots open up in full c
 ```
 mcgill-vsb-notifier/
 ├── src/
-│   └── main/
-│       └── java/
-│           ├── com/
-│               └── vsbnotifier/
-│                   ├── Main.java                  # Application entry point
-│                   ├── config/
-│                   │   └── ConfigLoader.java      # Loads configuration
-│                   ├── service/
-│                   │   ├── VSBService.java        # Handles VSB API calls
-│                   │   └── NotificationService.java # Handles Twilio API calls
-│                   ├── model/
-│                   │   ├── Course.java            # Course data model
-│                   │   └── SeatAvailability.java  # Availability data model
-│                   └── util/
-│                       └── XMLParser.java         # Parses VSB XML responses
-├── resources/
-│   ├── config.properties.example                  # Example configuration
-│   └── log4j2.xml                                 # Logging configuration
-├── pom.xml                                        # Maven dependencies
-└── README.md                                      # Project documentation
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── vsbnotifier/
+│   │   │           ├── main/
+│   │   │           │   └── McGillNotifier.java     # Main service
+│   │   │           ├── config/
+│   │   │           │   └── ConfigLoader.java       # Loads app config
+│   │   │           ├── service/
+│   │   │           │   ├── McGillCourseChecker.java # VSB data retrieval
+│   │   │           │   ├── TwilioNotifier.java     # SMS notifications
+│   │   │           │   └── GoogleSheetReader.java  # NEW: Reads form responses
+│   │   │           └── model/
+│   │   │               ├── CourseInfo.java         # Course data
+│   │   │               ├── SectionInfo.java        # Section data
+│   │   │               └── UserRequest.java        # NEW: Stores user requests
+│   │   └── resources/
+│   │       └── config.properties                   # App-level config
+└── pom.xml                                         # Dependencies
 ```
 ## Interactions & Dependencies
 ```
-+----------------+      +-------------------+      +----------------+
-| McGillNotifier |----->| McGillCourseChecker |----->| VSB Website API |
-| (Main Class)   |      | (Data Retrieval)   |      | (External)     |
-+----------------+      +-------------------+      +----------------+
-        |                        |
-        v                        v
-+----------------+      +-------------------+
-| Config         |      | CourseInfo        |
-| (Optional)     |      | (Data Model)      |
-+----------------+      +-------------------+
++----------------------+      +-------------------+
+| QR Code             |----->| Google Form       |
+| (Links to Form)     |      | (User Input)      |
++----------------------+      +-------------------+
+                                       |
+                                       v
+                              +-------------------+
+                              | Google Sheet      |
+                              | (Stores Responses)|
+                              +-------------------+
+                                       |
+                                       v
++----------------------+      +-------------------+
+| McGillNotifier       |<---->| GoogleSheetReader |
+| (Main Class)         |      | (Reads Responses) |
++----------------------+      +-------------------+
+        |                             |
+        |                             v
+        |                    +-------------------+
+        |                    | UserRequest       |
+        |                    | (Request Model)   |
+        |                    +-------------------+
         |
-        v
-+----------------+      +-------------------+
-| TwilioNotifier |----->| Twilio API        |
-| (Notifications)|      | (External)        |
-+----------------+      +-------------------+
+        |    +-------------------+      +-------------------+
+        +--->| ConfigLoader      |----->| config.properties |
+        |    | (App Settings)    |      | (App Config)      |
+        |    +-------------------+      +-------------------+
+        |
+        |    +-------------------+      +-------------------+
+        +--->| McGillCourseChecker |-->| VSB Website API    |
+        |    | (Course Data)      |    | (External)         |
+        |    +-------------------+      +-------------------+
+        |              |
+        |              v
+        |    +-------------------+
+        |    | CourseInfo        |
+        |    | (Course Model)    |
+        |    +-------------------+
+        |              |
+        |              v
+        |    +-------------------+
+        |    | SectionInfo       |
+        |    | (Section Model)   |
+        |    +-------------------+
+        |
+        |    +-------------------+      +-------------------+
+        +--->| TwilioNotifier    |----->| Twilio API        |
+             | (SMS Notifications)|     | (External)        |
+             +-------------------+      +-------------------+
 ```
-## Dependency Flow
-
-1- McGillNotifier depends on:
-   - McGillCourseChecker for course data
-   - TwilioNotifier for sending notifications
-   - Config for settings (optional)
-
-2- McGillCourseChecker depends on:
-   - VSB Website API (external)
-   - Inner classes (CourseInfo, SectionInfo) as data models
-
-
-3- TwilioNotifier depends on:
-   - Twilio API (external)
-   - Notification settings from Config or main class
-
-
-
 ## Data Flow
-1- McGillNotifier gets configuration (term, course, CRN)
-2- McGillCourseChecker retrieves course data from VSB
-3- McGillCourseChecker parses and returns structured data
-4- McGillNotifier checks availability against criteria
-5- If seats available, TwilioNotifier sends SMS
+
+1- User Interaction:
+   - User scans QR code
+   - Google Form opens on their phone
+   - User submits course info and phone number
+
+
+2- Response Collection:
+   - Google automatically adds response to your Sheet
+
+
+3- Application Processing:
+   - Your app checks the Google Sheet periodically
+   - Processes new entries and starts monitoring those courses
+   - Sends confirmation texts to users
+
+4- Notification:
+- When seats become available, sends texts to users
 
 ## 🧩 Code Examples
 
