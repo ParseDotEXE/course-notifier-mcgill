@@ -1,4 +1,7 @@
-package com.example;
+package com.vsbnotifier.config;
+
+import com.vsbnotifier.service.McGillCourseChecker;
+import com.vsbnotifier.service.McGillCourseChecker.CourseInfo;
 
 public class TestCourseChecker {
     public static void main(String[] args) {

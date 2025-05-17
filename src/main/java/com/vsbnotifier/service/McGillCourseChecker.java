@@ -1,4 +1,4 @@
-package com.example;
+package com.vsbnotifier.service;
 
 //add necessary imports
 import java.net.http.HttpClient;
