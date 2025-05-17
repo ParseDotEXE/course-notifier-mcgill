@@ -1,5 +1,8 @@
 package com.vsbnotifier.model;
 
-public class CourseInfo {
+import java.util.ArrayList;
+import java.util.List;
 
+public class CourseInfo {
+    //TODO: add fields for course information
 }
