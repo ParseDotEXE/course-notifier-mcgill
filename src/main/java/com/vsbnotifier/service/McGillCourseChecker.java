@@ -5,7 +5,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.net.URI;
@@ -107,37 +110,29 @@ public class McGillCourseChecker {
     // Helper method to extract all sections info from Document
     private CourseInfo extractCourseInfo(Document doc) {
         CourseInfo courseInfo = new CourseInfo();
-        List<SectionInfo> sections = new ArrayList<>();
+        Map<String, SectionInfo> sectionMap = new HashMap<>();
 
         // 1. Extract course-level information
-        // Get course name from <offering> element
         NodeList offeringNodes = doc.getElementsByTagName("offering");
         if (offeringNodes.getLength() > 0) {
             Element offeringElement = (Element) offeringNodes.item(0);
             String courseTitle = offeringElement.getAttribute("title");
             String courseDesc = offeringElement.getAttribute("desc");
-
-            // set course title and description in CourseInfo
             courseInfo.setCourseCode(courseTitle);
             courseInfo.setCourseName(courseDesc);
         }
-        // Get course code from <course> element
 
-        // 2. Extract all sections
-        // Find all <block> elements
+        // 2. Extract all sections directly into the map
         NodeList blocks = doc.getElementsByTagName("block");
         for (int i = 0; i < blocks.getLength(); i++) {
             Element block = (Element) blocks.item(i);
-            String crn = block.getAttribute("key"); // this is the crn
-            String availableSeats = block.getAttribute("os"); // ts the seats available
-            String courseSection = block.getAttribute("secNo"); // this is the section number
-            SectionInfo sectionInfo = new SectionInfo(crn, courseSection, availableSeats); // create a new SectionInfo
-                                                                                           // object
-            sections.add(sectionInfo); // add the section info to the list
-            System.out.println("CRN: " + crn + ", Available Seats: " + availableSeats);
+            String crn = block.getAttribute("key");
+            String availableSeats = block.getAttribute("os");
+            String courseSection = block.getAttribute("secNo");
+            SectionInfo sectionInfo = new SectionInfo(crn, courseSection, availableSeats);
+            sectionMap.put(crn, sectionInfo); // Directly add to the map
         }
-        // 3. Set the data and return
-        courseInfo.setSections(sections);
+        courseInfo.setSections(sectionMap);
         return courseInfo;
     }
 }
