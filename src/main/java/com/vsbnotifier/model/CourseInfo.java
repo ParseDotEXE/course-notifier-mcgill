@@ -4,5 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CourseInfo {
-    //TODO: add fields for course information
+    private String courseCode; // e.g., "COMP 202"
+    private String courseName; // e.g. "foundations of programming"
+    private List<SectionInfo> sections; // List of sections for this course
+
+    //constructor
+    public CourseInfo(String courseCode, String courseName, List<SectionInfo> sections) {
+        this.courseCode = courseCode;
+        this.courseName = courseName;
+        this.sections = sections;
+    }
+    public CourseInfo() {
+        this.sections = new ArrayList<>(); //store all course info in a list
+    }
+    public String getCourseCode() {
+        return courseCode;
+    }
+    public String getCourseName(){
+        return courseName;
+    }
+    public List<SectionInfo> getSections(){
+        return sections;
+    }
 }
