@@ -26,4 +26,14 @@ public class CourseInfo {
     public List<SectionInfo> getSections(){
         return sections;
     }
+    //setters
+    public void setSections(List<SectionInfo> sections) {
+        this.sections = sections;
+    }
+    public void setCourseCode(String courseCode) {
+        this.courseCode = courseCode;
+    }
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
 }
