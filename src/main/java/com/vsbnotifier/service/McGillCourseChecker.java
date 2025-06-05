@@ -4,6 +4,7 @@ package com.vsbnotifier.service;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.io.IOException;
 import java.io.StringReader;
 import javax.xml.parsers.DocumentBuilder;
@@ -36,10 +38,13 @@ public class McGillCourseChecker {
         HttpClient client = HttpClient.newBuilder().cookieHandler(cookieManager).build();
 
         // 2. visit the main VSB page to make session and set cookies
-        String mainPageUrl = "https://vsb.mcgill.ca/criteria.jsp?term=" + term; // main page URL
+        String termEncoded = URLEncoder.encode(term, StandardCharsets.UTF_8);
+        String urlString = "https://vsb.mcgill.ca/criteria.jsp?term=" + termEncoded;
+        URI uri = URI.create(urlString);
+        // main page URL
         // request to visit the main page
         HttpRequest mainPageRequest = HttpRequest.newBuilder()
-                .uri(URI.create(mainPageUrl)) // set the URI
+                .uri(URI.create(urlString)) // set the URI
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36") // set user agent
                 .GET() // set request method to GET
                 .build(); // build the request
@@ -53,11 +58,12 @@ public class McGillCourseChecker {
 
         // 3. make API call to get course data
         String url = buildUrl(term, courseCode); // build the URL with parameters
+        System.out.println("DEBUG URL: " + urlString);
         // request to get course data
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url)) // set the URI
                 .header("Accept", "application/xml, text/xml, */*; q=0.01") // set accept header
-                .header("Referer", mainPageUrl) // set referer header
+                .header("Referer", urlString) // set referer header
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36") // set user agent
                 .header("X-Requested-With", "XMLHttpRequest") // set X-Requested-With header (important missing header
                                                               // from last time)
@@ -68,6 +74,10 @@ public class McGillCourseChecker {
         if (response.statusCode() != 200) {
             throw new IOException("Failed to fetch course data from VSB API.");
         }
+        System.out.println(java.util.TimeZone.getDefault());
+        System.out.println(java.time.ZonedDateTime.now());
+        System.out.println("RAW XML RESPONSE:");
+        System.out.println(response.body());
 
         // 4. Parse XML response
         Document doc = parseXmlResponse(response.body()); // parse the XML response
@@ -95,16 +105,17 @@ public class McGillCourseChecker {
 
     // Helper method to build the URL with parameters
     private String buildUrl(String term, String courseCode) {
-        String formattedCourseCode = courseCode.replace(" ", "-");
+        String termEncoded = URLEncoder.encode(term, StandardCharsets.UTF_8);
+        String formattedCourseCode = URLEncoder.encode(courseCode.replace(" ", "-"), StandardCharsets.UTF_8);
 
         return API_URL + "?" +
-                "term=" + term + // term parameter
-                "&course_0_0=" + formattedCourseCode + // add course code
+                "term=" + termEncoded + // encoded term parameter
+                "&course_0_0=" + formattedCourseCode + // encoded course code
                 "&rq_0_0=" + // request code
                 "&t=438" + // request time
                 "&e=27" + // event code
                 "&nouser=1" + // no user
-                "&_=" + System.currentTimeMillis(); // add current timestamp
+                "&_=" + System.currentTimeMillis(); // current timestamp
     }
 
     // Helper method to extract all sections info from Document
