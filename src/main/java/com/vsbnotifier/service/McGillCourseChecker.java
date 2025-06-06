@@ -52,11 +52,35 @@ public class McGillCourseChecker {
         //create a new waitdriver object
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3)); //wait for 3 seconds
         //get all requests and responses in the network
+        
+        //boolean to check if the course is found
+        java.util.concurrent.atomic.AtomicBoolean found = new java.util.concurrent.atomic.AtomicBoolean(false);
+        
         proxy.getHar().getLog().getEntries().forEach(entry -> {
             String url = entry.getRequest().getUrl();
-            int status = entry.getResponse().getStatus();
-            System.out.println("URL: " + url + " | Status: " + status);
+            // Check if the URL contains "class-data?"
+            if(url.contains("class-data?")){
+                System.out.println("Found matching URL: " + url);
+                System.out.println("Status code: " + entry.getResponse().getStatus());
+                found.set(true); //set the found boolean to true
+            }
         });
+        if(!found.get()){
+            driver.navigate().refresh(); //refresh the page if the class-data? is not found
+            proxy.newHar("vsb-retry"); // Start fresh recording
+            // Wait a bit for new requests
+            Thread.sleep(2000);
+            // Recheck the HAR entries
+            proxy.getHar().getLog().getEntries().forEach(entry -> {
+                String url = entry.getRequest().getUrl();
+                // Check if the URL contains "class-data?"
+                if(url.contains("class-data?")){
+                    System.out.println("Found matching URL: " + url);
+                    System.out.println("Status code: " + entry.getResponse().getStatus());
+                    found.set(true); //set the found boolean to true
+                }
+            });
+        }
         //TODO: handle the edge case where the class-data? isnt found -> solution: refresh and try again
         
         return courseInfo;
