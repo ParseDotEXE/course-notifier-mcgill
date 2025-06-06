@@ -57,6 +57,7 @@ public class McGillCourseChecker {
             int status = entry.getResponse().getStatus();
             System.out.println("URL: " + url + " | Status: " + status);
         });
+        //TODO: handle the edge case where the class-data? isnt found -> solution: refresh and try again
         
         return courseInfo;
     }
