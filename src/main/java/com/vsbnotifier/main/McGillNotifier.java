@@ -25,7 +25,7 @@ public class McGillNotifier {
         try{
             McGillCourseChecker checker = new McGillCourseChecker();
             //example course
-            CourseInfo course = checker.checkCourseAvailability("202509", "MATH 240");
+            CourseInfo course = checker.checkCourseAvailability("202509", "COMP 370");
             System.out.println("Course: " + course.getCourseCode() + " - " + course.getCourseName());
             System.out.println("Sections with available seats:");
             System.out.println(course.getCrnAndLec());

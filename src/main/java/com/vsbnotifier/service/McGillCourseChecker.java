@@ -58,8 +58,7 @@ public class McGillCourseChecker {
 
         // 3. make API call to get course data
         String url = buildUrl(term, courseCode); // build the URL with parameters
-        System.out.println("DEBUG URL: " + urlString);
-        // request to get course data
+        System.out.println("API REQUEST URL: " + url); // <-- Add this line        // request to get course data
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url)) // set the URI
                 .header("Accept", "application/xml, text/xml, */*; q=0.01") // set accept header
@@ -107,10 +106,14 @@ public class McGillCourseChecker {
     private String buildUrl(String term, String courseCode) {
         String termEncoded = URLEncoder.encode(term, StandardCharsets.UTF_8);
         String formattedCourseCode = URLEncoder.encode(courseCode.replace(" ", "-"), StandardCharsets.UTF_8);
+        
+        // Hard-code va_0_0 for testing
+        String vaParam = "2ce0"; // <-- Replace with the value from your browser
 
         return API_URL + "?" +
                 "term=" + termEncoded + // encoded term parameter
                 "&course_0_0=" + formattedCourseCode + // encoded course code
+                "&va_0_0=" + vaParam + // <-- Add this line
                 "&rq_0_0=" + // request code
                 "&t=438" + // request time
                 "&e=27" + // event code
