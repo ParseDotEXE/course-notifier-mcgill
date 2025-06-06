@@ -19,16 +19,29 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import com.vsbnotifier.model.CourseInfo; //import the CourseInfo model
 import com.vsbnotifier.model.SectionInfo; //import the SectionInfo model
+import net.lightbody.bmp.BrowserMobProxy;
+import net.lightbody.bmp.BrowserMobProxyServer;
+import net.lightbody.bmp.client.ClientUtil;
+import org.openqa.selenium.Proxy;
 
 import java.time.Duration;
 
 public class McGillCourseChecker {
     ChromeOptions options = new ChromeOptions(); //to set up the ChromeDriver options
     public CourseInfo checkCouseAvailability(String term, String courseCode) throws Exception {
+        CourseInfo courseInfo = new CourseInfo(); //create a new CourseInfo object
+        BrowserMobProxy proxy = new BrowserMobProxyServer();
+        proxy.start(0); // dynamic port
+        //get Selenium proxy object
+        Proxy seleniumProxy = ClientUtil.createSeleniumProxy(proxy);
+        // configure Chrome options to use the proxy
+        options.setProxy(seleniumProxy);
         //set up the ChromeDriver options
         WebDriver driver = new ChromeDriver(options);
-        CourseInfo courseInfo = new CourseInfo(); //create a new CourseInfo object
+        //record traffic
+        proxy.newHar("vsb");
         driver.get("https://vsb.mcgill.ca/criteria.jsp");
+
         //TODO: selenium logic to navigate page, get course infomation
         
         //click on the correct term
@@ -38,6 +51,12 @@ public class McGillCourseChecker {
         driver.findElement(By.id("code_number")).sendKeys(Keys.ENTER); //click enter
         //create a new waitdriver object
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3)); //wait for 3 seconds
+        //get all requests and responses in the network
+        proxy.getHar().getLog().getEntries().forEach(entry -> {
+            String url = entry.getRequest().getUrl();
+            int status = entry.getResponse().getStatus();
+            System.out.println("URL: " + url + " | Status: " + status);
+        });
         
         return courseInfo;
     }
