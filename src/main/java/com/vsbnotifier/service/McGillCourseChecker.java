@@ -30,6 +30,7 @@ import org.openqa.selenium.Proxy;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import java.io.*;
+import org.xml.sax.SAXException;
 
 import java.time.Duration;
 
@@ -101,18 +102,41 @@ public class McGillCourseChecker {
                     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                     DocumentBuilder builder = factory.newDocumentBuilder();
                     //parse into document
-                    Document doc = builder.parse(new ByteArrayInputStream(body.getBytes()))
+                    Document doc = builder.parse(new ByteArrayInputStream(body.getBytes()));
 
                     //normalize the document
                     doc.getDocumentElement().normalize();
                     //get the block element
                     NodeList block = doc.getElementsByTagName("block");
+                    //get the course element
+                    NodeList course = doc.getElementsByTagName("offering");
+                    
                     //loop through the block elements and find the course information
-                    for(int i = 0; i < block.getLength(); i++){
-                        //create a new courseinfo object
-                        
+                    Map<String, SectionInfo> sections = new HashMap<>(); //map to store the sections
+                    //get the courseCode and courseName
+                    for(int j = 0; j < course.getLength(); j++){
+                        //get the course element
+                        Element courseElement = (Element) course.item(j);
+                        String courseCodeText = courseElement.getAttribute("key");
+                        String courseNameText = courseElement.getAttribute("title");
+                        //set the course code and name in the courseInfo object
+                        courseInfo.setCourseCode(courseCodeText); //set the course code
+                        courseInfo.setCourseName(courseNameText); //set the course name
+                        for(int i = 0; i < block.getLength(); i++){
+                            //get the block element
+                            Element sectionElement = (Element) block.item(i);
+                            //get the crn, section code, and available seats
+                            String crn = sectionElement.getAttribute("key");
+                            String sectionCode = sectionElement.getAttribute("disp");
+                            String availableSeats = sectionElement.getAttribute("os");
+                            //store inside a SectionInfo object
+                            SectionInfo sectionInfo = new SectionInfo(crn, sectionCode, availableSeats);
+                            //add to the courseInfo object
+                            sections.put(crn, sectionInfo); //use crn as key
+                        }
                     }
-                } catch (ParserConfigurationException e) {
+                    courseInfo.setSections(sections); //set the sections in the courseInfo object
+                } catch (ParserConfigurationException | SAXException | IOException e) {
                         e.printStackTrace();
                 }
 
