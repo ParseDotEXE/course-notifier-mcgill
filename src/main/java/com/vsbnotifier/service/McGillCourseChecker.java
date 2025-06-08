@@ -17,12 +17,19 @@ import com.vsbnotifier.model.CourseInfo;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.vsbnotifier.model.CourseInfo; //import the CourseInfo model
 import com.vsbnotifier.model.SectionInfo; //import the SectionInfo model
 import net.lightbody.bmp.BrowserMobProxy;
 import net.lightbody.bmp.BrowserMobProxyServer;
 import net.lightbody.bmp.client.ClientUtil;
+import net.lightbody.bmp.core.har.HarContent;
+import net.lightbody.bmp.core.har.HarEntry;
 import org.openqa.selenium.Proxy;
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import java.io.*;
 
 import java.time.Duration;
 
@@ -65,6 +72,7 @@ public class McGillCourseChecker {
                 found.set(true); //set the found boolean to true
             }
         });
+        AtomicReference<HarEntry> matchedEntry = new AtomicReference<>(); //atomic reference because we need to capture the entry later
         if(!found.get()){
             driver.navigate().refresh(); //refresh the page if the class-data? is not found
             proxy.newHar("vsb-retry"); // Start fresh recording
@@ -74,13 +82,43 @@ public class McGillCourseChecker {
             proxy.getHar().getLog().getEntries().forEach(entry -> {
                 String url = entry.getRequest().getUrl();
                 // Check if the URL contains "class-data?"
-                if(url.contains("class-data?")){
-                    System.out.println("Found matching URL: " + url);
-                    System.out.println("Status code: " + entry.getResponse().getStatus());
-                    found.set(true); //set the found boolean to true
+                if(url.contains("class-data?") && !found.get()){
+                    //capture entry
+                    matchedEntry.set(entry);
+                    found.set(true);  //its been found
                 }
+                //get response and extract the course information
+                HarContent content = entry.getResponse().getContent();
+                String body = content.getText(); //transofrm into xml string body
+
+                //prse the xml body to extract the crn, section code, and available seats
+                if(body == null || body.isEmpty()){
+                    System.out.println("No content found in the response.");
+                }
+                //parse
+                //create document builder factory
+                try{
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    DocumentBuilder builder = factory.newDocumentBuilder();
+                    //parse into document
+                    Document doc = builder.parse(new ByteArrayInputStream(body.getBytes()))
+
+                    //normalize the document
+                    doc.getDocumentElement().normalize();
+                    //get the block element
+                    NodeList block = doc.getElementsByTagName("block");
+                    //loop through the block elements and find the course information
+                    for(int i = 0; i < block.getLength(); i++){
+                        //create a new courseinfo object
+                        
+                    }
+                } catch (ParserConfigurationException e) {
+                        e.printStackTrace();
+                }
+
             });
         }
+        //
         //TODO: handle the edge case where the class-data? isnt found -> solution: refresh and try again
         
         return courseInfo;
