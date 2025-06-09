@@ -142,9 +142,8 @@ public class McGillCourseChecker {
 
             });
         }
-        //
-        //TODO: handle the edge case where the class-data? isnt found -> solution: refresh and try again
-        
+        driver.quit(); //quit the driver
+        proxy.stop(); //stop the proxy        
         return courseInfo;
     }
 }
