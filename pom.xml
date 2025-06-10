@@ -33,12 +33,6 @@
             <artifactId>webdrivermanager</artifactId>
             <version>5.8.0</version>
         </dependency>
-        <!-- BrowserMob Proxy -->
-        <dependency>
-            <groupId>net.lightbody.bmp</groupId>
-            <artifactId>browsermob-core</artifactId>
-            <version>2.1.5</version>
-        </dependency>
         
         <!-- Twilio SDK for SMS -->
         <dependency>

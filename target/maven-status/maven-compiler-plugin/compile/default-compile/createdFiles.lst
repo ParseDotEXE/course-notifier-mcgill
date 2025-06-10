@@ -1,0 +1,8 @@
+com\vsbnotifier\config\TestVSBApi.class
+com\vsbnotifier\model\UserRequest.class
+com\vsbnotifier\model\CourseInfo.class
+com\vsbnotifier\service\McGillCourseChecker.class
+com\vsbnotifier\service\TwilioNotifier.class
+com\vsbnotifier\main\McGillNotifier.class
+com\vsbnotifier\model\SectionInfo.class
+com\vsbnotifier\config\ConfigLoader.class

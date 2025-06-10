@@ -9,6 +9,7 @@ import java.util.Map;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -21,10 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import com.vsbnotifier.model.CourseInfo; //import the CourseInfo model
 import com.vsbnotifier.model.SectionInfo; //import the SectionInfo model
-import net.lightbody.bmp.client.ClientUtil;
-import net.lightbody.bmp.core.har.HarContent;
-import net.lightbody.bmp.core.har.HarEntry;
-import org.openqa.selenium.Proxy;
+import io.github.bonigarcia.wdm.WebDriverManager; //webdrivermanager import
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import java.io.*;
@@ -37,16 +35,11 @@ public class McGillCourseChecker {
 
     public CourseInfo checkCourseAvailability(String term, String courseCode) throws Exception {
         CourseInfo courseInfo = new CourseInfo(); // create a new CourseInfo object
-        BrowserMobProxy proxy = new BrowserMobProxyServer();
-        proxy.start(0); // dynamic port
+        WebDriverManager.chromedriver().setup(); // setup the ChromeDriver using WebDriverManager
         // get Selenium proxy object
-        Proxy seleniumProxy = ClientUtil.createSeleniumProxy(proxy);
-        // configure Chrome options to use the proxy
-        options.setProxy(seleniumProxy);
         // set up the ChromeDriver options
         WebDriver driver = new ChromeDriver(options);
-        // record traffic
-        proxy.newHar("vsb");
+
         driver.get("https://vsb.mcgill.ca/criteria.jsp");
 
         // TODO: selenium logic to navigate page, get course infomation
@@ -58,114 +51,92 @@ public class McGillCourseChecker {
         driver.findElement(By.id("code_number")).sendKeys(Keys.ENTER); // click enter
         // create a new waitdriver object
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3)); // wait for 3 seconds
-        // get all requests and responses in the network
+        Thread.sleep(3000); // give the page time to load results
+        // extract the course infomation
+        try {
+            WebElement courseName = driver.findElement(By.cssSelector("input[aria-label*='" + courseCode + "']"));
+            // transform to string
+            String courseNameText = courseName.getAttribute("aria-label");
 
-        // boolean to check if the course is found
-        java.util.concurrent.atomic.AtomicBoolean found = new java.util.concurrent.atomic.AtomicBoolean(false);
-
-        proxy.getHar().getLog().getEntries().forEach(entry -> {
-            String url = entry.getRequest().getUrl();
-            // Check if the URL contains "class-data?"
-            if (url.contains("class-data?")) {
-                System.out.println("Found matching URL: " + url);
-                System.out.println("Status code: " + entry.getResponse().getStatus());
-                found.set(true); // set the found boolean to true
+            // parse course code and name from aria-label
+            String[] parts = courseNameText.split(" ", 3);
+            if (parts.length >= 3) {
+                courseInfo.setCourseCode(parts[0] + " " + parts[1]); // EG: COMP 370
+                courseInfo.setCourseName(parts[2]);
+            } else {
+                // if parsing fails
+                System.out.println("Failed to parse course code and name from aria-label: " + courseNameText);
+                courseInfo.setCourseCode(courseCode); // if parsing fails, set course code to the input
+                courseInfo.setCourseName("No courses found bruh sorry twin");
             }
-        });
-        AtomicReference<HarEntry> matchedEntry = new AtomicReference<>(); // atomic reference because we need to capture
-                                                                          // the entry later
-        if (!found.get()) {
-            driver.navigate().refresh(); // refresh the page if the class-data? is not found
-            proxy.newHar("vsb-retry"); // Start fresh recording
-            // Wait a bit for new requests
-            Thread.sleep(2000);
-            // Recheck the HAR entries
-            proxy.getHar().getLog().getEntries().forEach(entry -> {
-                String url = entry.getRequest().getUrl();
-                // Check if the URL contains "class-data?"
-                if (url.contains("class-data?") && !found.get()) {
-                    // capture entry
-                    matchedEntry.set(entry);
-                    found.set(true); // its been found
-                }
-                // get response and extract the course information
-                HarContent content = entry.getResponse().getContent();
-                String body = content.getText(); // transofrm into xml string body
+            // step 2: find all sections of the course
+            WebElement courseTable = driver.findElement(By.cssSelector(".inner_legend_table")); // find the course table
+            System.out.println("Found legend table!");
 
-                // prse the xml body to extract the crn, section code, and available seats
-                if (body == null || body.isEmpty()) {
-                    System.out.println("No content found in the response.");
-                }
-                // parse
-                // create document builder factory
+            List<WebElement> rows = courseTable.findElements(By.tagName("tr")); // get all rows in the table
+            System.out.println("Found " + rows.size() + " rows in the table");
+
+
+            Map<String, SectionInfo> sections = new HashMap<>(); // create a map to store sections
+            // extract each row's information
+            // for each web element in the rows
+            for (WebElement element : rows) {
                 try {
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    DocumentBuilder builder = factory.newDocumentBuilder();
-                    // parse into document
-                    Document doc = builder.parse(new ByteArrayInputStream(body.getBytes()));
+                    // get the crn first
+                    WebElement crnElement = element.findElement(By.cssSelector("span[data-crns]"));
+                    String crn = crnElement.getAttribute("data-crns");
 
-                    // normalize the document
-                    doc.getDocumentElement().normalize();
-                    // get the block element
-                    NodeList block = doc.getElementsByTagName("block");
-                    // get the course element
-                    NodeList course = doc.getElementsByTagName("offering");
+                    // get section from strong tag
+                    WebElement sectionElement = element.findElement(By.tagName("strong"));
+                    String sectionCode = sectionElement.getText().trim(); // get the text version
 
-                    // loop through the block elements and find the course information
-                    Map<String, SectionInfo> sections = new HashMap<>(); // map to store the sections
-                    // get the courseCode and courseName
-                    for (int j = 0; j < course.getLength(); j++) {
-                        // get the course element
-                        Element courseElement = (Element) course.item(j);
-                        String courseCodeText = courseElement.getAttribute("key");
-                        String courseNameText = courseElement.getAttribute("title");
-                        // set the course code and name in the courseInfo object
-                        courseInfo.setCourseCode(courseCodeText); // set the course code
-                        courseInfo.setCourseName(courseNameText); // set the course name
-                        for (int i = 0; i < block.getLength(); i++) {
-                            // get the block element
-                            Element sectionElement = (Element) block.item(i);
-                            // get the crn, section code, and available seats
-                            String crn = sectionElement.getAttribute("key");
-                            String sectionCode = sectionElement.getAttribute("disp");
-                            String availableSeats = sectionElement.getAttribute("os");
-                            // store inside a SectionInfo object
-                            SectionInfo sectionInfo = new SectionInfo(crn, sectionCode, availableSeats);
-                            // add to the courseInfo object
-                            sections.put(crn, sectionInfo); // use crn as key
+                    // get seat availability
+                    String seatStatus;
+                    try{
+                        WebElement seatElement = element.findElement(By.cssSelector("span.seatText"));
+                        seatStatus = seatElement.getText().trim(); // get the text version
+                        //it doesnt print the number of seats, cant retreive the info TODO: fix this shit
+                        System.out.println("Seat status found: " + seatStatus);
+                    } catch (Exception e) {
+                        // If no seatText span, check for "Full" or other status
+                        if(crnElement.getAttribute("data-color").equals("red")){
+                            seatStatus = "Full"; //if the crn is red, no seats available
+                        }else{
+                            seatStatus = "Available";
                         }
                     }
-                    courseInfo.setSections(sections); // set the sections in the courseInfo object
-                } catch (ParserConfigurationException | SAXException | IOException e) {
-                    e.printStackTrace();
+                    // create a new sectionInfo object and add to the map
+                    SectionInfo sectionInfo = new SectionInfo();
+                    sectionInfo.setCrn(crn); // set the crn
+                    sectionInfo.setSectionCode(sectionCode); // set the section code
+                    sectionInfo.setAvailableSeats(seatStatus); // set the available seats
+                    sections.put(crn, sectionInfo);
+                    System.out.println(
+                            "Found section - CRN: " + crn + ", Section: " + sectionCode + ", Status: " + seatStatus);
+                } catch (Exception e) {
+                    // handle error
+                    System.out.println("Error processing row: " + e.getMessage());
                 }
-
-            });
-        }
-        driver.quit(); // quit the driver
-        proxy.stop(); // stop the proxy
-        System.out.println("Course Code: " + courseInfo.getCourseCode());
-        System.out.println("Course Name: " + courseInfo.getCourseName());
-        System.out
-                .println("Sections found: " + (courseInfo.getSections() != null ? courseInfo.getSections().size() : 0));
-        if (courseInfo.getSections() != null) {
-            for (SectionInfo section : courseInfo.getSections().values()) {
-                System.out.println("CRN: " + section.getCrn() +
-                        ", Section: " + section.getSectionCode() +
-                        ", Available Seats: " + section.getAvailableSeats());
             }
+            courseInfo.setSections(sections); // set the sections in the courseInfo object
+        } catch (Exception e) {
+            System.out.println("Error extracting course data: " + e.getMessage());
+            e.printStackTrace();
         }
-        return courseInfo;
+        driver.quit(); // close the driver
+        return courseInfo; // return the course info object
     }
 
     public static void main(String[] args) {
         try {
             McGillCourseChecker checker = new McGillCourseChecker();
             // Test with a known course and term
-            CourseInfo course = checker.checkCourseAvailability("Fall 2025", "COMP 370");
+            CourseInfo course = checker.checkCourseAvailability("Fall 2025", "COMP 250");
+
             // Print out all extracted info for verification
             System.out.println("Course Code: " + course.getCourseCode());
             System.out.println("Course Name: " + course.getCourseName());
+
             if (course.getSections() != null && !course.getSections().isEmpty()) {
                 System.out.println("Sections found: " + course.getSections().size());
                 for (SectionInfo section : course.getSections().values()) {
@@ -177,6 +148,7 @@ public class McGillCourseChecker {
                 System.out.println("No sections found or course not available.");
             }
         } catch (Exception e) {
+            System.out.println("Error occurred: " + e.getMessage());
             e.printStackTrace();
         }
     }
