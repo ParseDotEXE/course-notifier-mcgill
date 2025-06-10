@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.vsbnotifier.model.CourseInfo;
 import com.vsbnotifier.model.UserRequest;
+import com.vsbnotifier.service.McGillCourseChecker;
 
 public class McGillNotifier {
     //orchestrate the course checking and notification process
