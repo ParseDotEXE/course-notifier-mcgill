@@ -51,7 +51,7 @@ public class McGillCourseChecker {
         driver.findElement(By.id("code_number")).sendKeys(Keys.ENTER); // click enter
         // create a new waitdriver object
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3)); // wait for 3 seconds
-        Thread.sleep(3000); // give the page time to load results
+        Thread.sleep(4000); // give the page time to load results
         // extract the course infomation
         try {
             WebElement courseName = driver.findElement(By.cssSelector("input[aria-label*='" + courseCode + "']"));
@@ -77,34 +77,52 @@ public class McGillCourseChecker {
             System.out.println("Found " + rows.size() + " rows in the table");
 
             Map<String, SectionInfo> sections = new HashMap<>(); // create a map to store sections
-           
+
             // extract each row's information
             // for each web element in the rows
             for (WebElement element : rows) {
                 try {
                     // get the crn first
                     List<WebElement> crnSpans = element.findElements(By.cssSelector("span[data-crns]"));
-                    if(crnSpans.isEmpty()) {
+                    if (crnSpans.isEmpty()) {
                         System.out.println("Skipping row - no data-crns found");
                         continue; // Skip this row
                     }
                     String crn = crnSpans.get(0).getAttribute("data-crns").trim(); // get the first span with data-crns
 
                     // get section from strong tag
-                    /*WebElement sectionElement = element.findElement(By.cssSelector("strong.leftnclear.type_block"));
-                    String sectionCode = sectionElement.getText().trim(); //get the text version*/
-                    //alternative way to get the section code
+                    /*
+                     * WebElement sectionElement =
+                     * element.findElement(By.cssSelector("strong.leftnclear.type_block"));
+                     * String sectionCode = sectionElement.getText().trim(); //get the text version
+                     */
+                    // alternative way to get the section code
                     WebElement sectionElement = element.findElement(By.cssSelector("strong"));
-                    String sectionCode = sectionElement.getText().trim();
+                    String sectionCode = sectionElement.getAttribute("innerHTML").trim();
                     System.out.println("DEBUG - Section element found, text: '" + sectionCode + "'");
-                    
+
                     // get seat availability
-                    /*WebElement seatsElement = element.findElement(By.cssSelector("span.seatText"));
-                    String seatStatus = seatsElement.getText().trim();*/
-                    //alternative way to get the seat availability
-                    WebElement seatsElement = element.findElement(By.cssSelector("span.seatText"));
-                    String seatStatus = seatsElement.getText().trim();
-                    System.out.println("DEBUG - Seats element found, text: '" + seatStatus + "'");
+                    String seatStatus;
+                    try {
+                        // Try to find available seats first
+                        WebElement seatsElement = element.findElement(By.cssSelector("span.seatText"));
+                        seatStatus = seatsElement.getAttribute("innerHTML").trim();
+                    } catch (Exception e) {
+                        // If no seatText, try to find "Full" indicator
+                        try {
+                            WebElement fullElement = element.findElement(By.cssSelector("span.fullText"));
+                            seatStatus = "Full";
+                        } catch (Exception e2) {
+                            // If neither, check the background color from the span with data-crns
+                            String dataColor = crnSpans.get(0).getAttribute("data-color");
+                            if ("red".equals(dataColor)) {
+                                seatStatus = "Full";
+                            } else {
+                                seatStatus = "Unknown";
+                            }
+                        }
+                    }
+                    System.out.println("DEBUG - Seat status: '" + seatStatus + "'");
 
                     // create a new sectionInfo object and add to the map
                     SectionInfo sectionInfo = new SectionInfo();
@@ -128,8 +146,7 @@ public class McGillCourseChecker {
         return courseInfo; // return the course info object
     }
 
-
-    /*public void debugTableStructure(String term, String courseCode) throws Exception {
+    /*public void debugCompleteTableStructure(String term, String courseCode) throws Exception {
         WebDriverManager.chromedriver().setup();
         WebDriver driver = new ChromeDriver(options);
 
@@ -138,38 +155,55 @@ public class McGillCourseChecker {
             driver.findElement(By.linkText(term)).click();
             driver.findElement(By.id("code_number")).sendKeys(courseCode);
             driver.findElement(By.id("code_number")).sendKeys(Keys.ENTER);
+
+            // Wait longer for content to load
             Thread.sleep(3000);
 
-            // Debug the table structure
+            // Find the legend table
             WebElement courseTable = driver.findElement(By.cssSelector(".inner_legend_table"));
-            List<WebElement> rows = courseTable.findElements(By.tagName("tr"));
-            System.out.println("Found " + rows.size() + " rows in the table");
+            System.out.println("=== COMPLETE TABLE HTML ===");
+            System.out.println(courseTable.getAttribute("outerHTML"));
+            System.out.println("=== END COMPLETE TABLE HTML ===\n");
 
+            // Get all rows
+            List<WebElement> rows = courseTable.findElements(By.tagName("tr"));
+            System.out.println("Found " + rows.size() + " rows in the table\n");
+
+            // Analyze each row in detail
             for (int i = 0; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
-                System.out.println("=== ROW " + i + " ===");
+                System.out.println("=== ROW " + i + " ANALYSIS ===");
                 System.out.println("Row HTML: " + row.getAttribute("outerHTML"));
 
-                List<WebElement> spans = row.findElements(By.tagName("span"));
-                List<WebElement> strongs = row.findElements(By.tagName("strong"));
-
-                System.out.println("Found " + spans.size() + " spans and " + strongs.size() + " strong tags");
-
-                for (int j = 0; j < spans.size(); j++) {
-                    String dataCrns = spans.get(j).getAttribute("data-crns");
-                    String spanText = spans.get(j).getText();
-                    String spanClass = spans.get(j).getAttribute("class");
-                    if (dataCrns != null && !dataCrns.isEmpty()) {
-                        System.out.println("Span " + j + " has data-crns: " + dataCrns);
-                    }
-                    if (!spanText.isEmpty()) {
-                        System.out.println("Span " + j + " text: '" + spanText + "' class: '" + spanClass + "'");
-                    }
+                // Check for CRN spans
+                List<WebElement> crnSpans = row.findElements(By.cssSelector("span[data-crns]"));
+                System.out.println("CRN spans found: " + crnSpans.size());
+                for (int j = 0; j < crnSpans.size(); j++) {
+                    System.out
+                            .println("  CRN span " + j + ": data-crns = " + crnSpans.get(j).getAttribute("data-crns"));
                 }
 
+                // Check all strong elements
+                List<WebElement> strongs = row.findElements(By.tagName("strong"));
+                System.out.println("Strong elements found: " + strongs.size());
                 for (int j = 0; j < strongs.size(); j++) {
-                    String strongText = strongs.get(j).getText();
-                    System.out.println("Strong " + j + " text: '" + strongText + "'");
+                    System.out.println("  Strong " + j + ": text = '" + strongs.get(j).getText() + "'");
+                    System.out.println(
+                            "  Strong " + j + ": innerHTML = '" + strongs.get(j).getAttribute("innerHTML") + "'");
+                    System.out.println("  Strong " + j + ": class = '" + strongs.get(j).getAttribute("class") + "'");
+                }
+
+                // Check all spans
+                List<WebElement> spans = row.findElements(By.tagName("span"));
+                System.out.println("Span elements found: " + spans.size());
+                for (int j = 0; j < spans.size(); j++) {
+                    String text = spans.get(j).getText();
+                    String className = spans.get(j).getAttribute("class");
+                    String innerHTML = spans.get(j).getAttribute("innerHTML");
+                    System.out.println("  Span " + j + ": text = '" + text + "' class = '" + className + "'");
+                    if (!innerHTML.isEmpty() && !innerHTML.equals(text)) {
+                        System.out.println("  Span " + j + ": innerHTML = '" + innerHTML + "'");
+                    }
                 }
                 System.out.println("=== END ROW " + i + " ===\n");
             }
@@ -184,9 +218,8 @@ public class McGillCourseChecker {
             McGillCourseChecker checker = new McGillCourseChecker();
 
             // Run the debug first
-            //System.out.println("=== DEBUGGING TABLE STRUCTURE ===");
-            //checker.debugTableStructure("Fall 2025", "COMP 250");
-            // Test with a known course and term
+            //System.out.println("=== DEBUGGING COMPLETE TABLE STRUCTURE ===");
+            //checker.debugCompleteTableStructure("Fall 2025", "COMP 250");
             CourseInfo course = checker.checkCourseAvailability("Fall 2025", "COMP 250");
 
             // Print out all extracted info for verification
