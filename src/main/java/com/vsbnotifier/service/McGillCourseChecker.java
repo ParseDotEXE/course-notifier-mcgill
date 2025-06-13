@@ -51,7 +51,7 @@ public class McGillCourseChecker {
         driver.findElement(By.id("code_number")).sendKeys(Keys.ENTER); // click enter
         // create a new waitdriver object
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3)); // wait for 3 seconds
-        Thread.sleep(4000); // give the page time to load results
+        Thread.sleep(3000); // give the page time to load results
         // extract the course infomation
         try {
             WebElement courseName = driver.findElement(By.cssSelector("input[aria-label*='" + courseCode + "']"));
