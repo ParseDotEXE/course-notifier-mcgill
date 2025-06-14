@@ -52,7 +52,22 @@ public class CourseMonitor {
                         //compare the current seats with previous seats
                         String previousSeats = previousSeatCounts.get(crn);
                         //TODO: comparison logic
-                        if
+                        if(currentSeats.equals(previousSeats)){
+                            //no change, continue to next section
+                            continue;
+                        }else{
+                            //check if the current seats are available
+                            if(!(currentSeats.equals("0") || currentSeats.equals("Full"))){
+                                //seats became available, alert the user
+                                //TODO: implement alert logic
+                                
+                                //stop
+                                executorService.shutdown();
+                                return;
+                            }
+                        }
+                        //update the previousSeatCounts map with the current seats
+                        previousSeatCounts.put(crn, currentSeats);
                     }else{
                         //add to the previousSeatCounts map
                         previousSeatCounts.put(crn, currentSeats);
