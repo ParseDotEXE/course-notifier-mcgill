@@ -17,10 +17,12 @@ public class CourseMonitor {
     private static final int checkInterval = 2 * 60; // 2 minutes in seconds
     private String term;
     private String courseCode;
+    private String section;
 
-    public CourseMonitor(String term, String courseCode) {
+    public CourseMonitor(String term, String courseCode, String section) {
         this.term = term;
         this.courseCode = courseCode;
+        this.section = section; //section can be either A, B, or both
         this.previousSeatCounts = new HashMap<>();
         this.executorService = Executors.newScheduledThreadPool(1);
         this.courseChecker = new McGillCourseChecker();
@@ -79,5 +81,27 @@ public class CourseMonitor {
                 e.printStackTrace();
             }
         }, 0, checkInterval, SECONDS);
+    }
+    //helper to filter sections based on the desired section
+    public boolean shouldMonitorThisSection(SectionInfo sectionInfo){
+        //case 1: monitor all sections
+        if (this.section.equals("any")){
+            return true; //monitor all sections
+        //case 2: monitor specific sections (Lec 001)
+        }else if(this.section.equals("Lec 001")){
+            if(sectionInfo.getSectionCode().equals("Lec 001")){
+                return true; //monitor only Lec 001
+            }else{
+                return false; //do not monitor other sections
+            }
+        //case 3: monitor specific sections (Lec 002)   
+        }else if(this.section.equals("Lec 002")){
+            if(sectionInfo.getSectionCode().equals("Lec 002")){
+                return true; //monitor only Lec 002
+            }else{
+                return false; //do not monitor other sections
+            }
+        }
+        return false; //default case, do not monitor any sections
     }
 }
