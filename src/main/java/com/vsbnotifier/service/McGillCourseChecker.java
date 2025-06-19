@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -53,6 +54,14 @@ public class McGillCourseChecker {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(3)); // wait for 3 seconds
         Thread.sleep(3000); // give the page time to load results
         // extract the course infomation
+        try {
+            WebElement lectures = driver.findElement(By.cssSelector("h4[aria-label*='" + courseCode + "']"));
+            lectures.click(); // click on the sections to expand them
+            System.out.println("Clicked on course title to expand sections");
+            Thread.sleep(2000); // Wait for sections to load
+        } catch (Exception e) {
+            System.out.println("Could not click course title: " + e.getMessage());
+        }
         try {
             WebElement courseName = driver.findElement(By.cssSelector("input[aria-label*='" + courseCode + "']"));
             // transform to string
@@ -146,7 +155,7 @@ public class McGillCourseChecker {
         return courseInfo; // return the course info object
     }
 
-    /*public void debugCompleteTableStructure(String term, String courseCode) throws Exception {
+    public void debugCourseTitle(String term, String courseCode) throws Exception {
         WebDriverManager.chromedriver().setup();
         WebDriver driver = new ChromeDriver(options);
 
@@ -155,63 +164,131 @@ public class McGillCourseChecker {
             driver.findElement(By.linkText(term)).click();
             driver.findElement(By.id("code_number")).sendKeys(courseCode);
             driver.findElement(By.id("code_number")).sendKeys(Keys.ENTER);
-
-            // Wait longer for content to load
             Thread.sleep(3000);
 
-            // Find the legend table
-            WebElement courseTable = driver.findElement(By.cssSelector(".inner_legend_table"));
-            System.out.println("=== COMPLETE TABLE HTML ===");
-            System.out.println(courseTable.getAttribute("outerHTML"));
-            System.out.println("=== END COMPLETE TABLE HTML ===\n");
+            System.out.println("=== SEARCHING FOR COURSE TITLE ELEMENTS ===");
 
-            // Get all rows
-            List<WebElement> rows = courseTable.findElements(By.tagName("tr"));
-            System.out.println("Found " + rows.size() + " rows in the table\n");
+            // Search for any elements containing the course code
+            List<WebElement> elementsWithCourseCode = driver
+                    .findElements(By.xpath("//*[contains(text(), '" + courseCode + "')]"));
+            System.out.println("Found " + elementsWithCourseCode.size() + " elements containing '" + courseCode + "':");
 
-            // Analyze each row in detail
-            for (int i = 0; i < rows.size(); i++) {
-                WebElement row = rows.get(i);
-                System.out.println("=== ROW " + i + " ANALYSIS ===");
-                System.out.println("Row HTML: " + row.getAttribute("outerHTML"));
+            for (int i = 0; i < elementsWithCourseCode.size(); i++) {
+                WebElement elem = elementsWithCourseCode.get(i);
+                System.out.println("Element " + i + ":");
+                System.out.println("  Tag: " + elem.getTagName());
+                System.out.println("  Text: '" + elem.getText() + "'");
+                System.out.println("  Class: '" + elem.getAttribute("class") + "'");
+                System.out.println("  Clickable: " + elem.isEnabled());
+                System.out.println("  HTML: " + elem.getAttribute("outerHTML"));
+                System.out.println();
+            }
 
-                // Check for CRN spans
-                List<WebElement> crnSpans = row.findElements(By.cssSelector("span[data-crns]"));
-                System.out.println("CRN spans found: " + crnSpans.size());
-                for (int j = 0; j < crnSpans.size(); j++) {
-                    System.out
-                            .println("  CRN span " + j + ": data-crns = " + crnSpans.get(j).getAttribute("data-crns"));
-                }
+            // Also search for elements containing "FOUNDATIONS"
+            List<WebElement> elementsWithFoundations = driver
+                    .findElements(By.xpath("//*[contains(text(), 'FOUNDATIONS')]"));
+            System.out.println("Found " + elementsWithFoundations.size() + " elements containing 'FOUNDATIONS':");
 
-                // Check all strong elements
-                List<WebElement> strongs = row.findElements(By.tagName("strong"));
-                System.out.println("Strong elements found: " + strongs.size());
-                for (int j = 0; j < strongs.size(); j++) {
-                    System.out.println("  Strong " + j + ": text = '" + strongs.get(j).getText() + "'");
-                    System.out.println(
-                            "  Strong " + j + ": innerHTML = '" + strongs.get(j).getAttribute("innerHTML") + "'");
-                    System.out.println("  Strong " + j + ": class = '" + strongs.get(j).getAttribute("class") + "'");
-                }
-
-                // Check all spans
-                List<WebElement> spans = row.findElements(By.tagName("span"));
-                System.out.println("Span elements found: " + spans.size());
-                for (int j = 0; j < spans.size(); j++) {
-                    String text = spans.get(j).getText();
-                    String className = spans.get(j).getAttribute("class");
-                    String innerHTML = spans.get(j).getAttribute("innerHTML");
-                    System.out.println("  Span " + j + ": text = '" + text + "' class = '" + className + "'");
-                    if (!innerHTML.isEmpty() && !innerHTML.equals(text)) {
-                        System.out.println("  Span " + j + ": innerHTML = '" + innerHTML + "'");
-                    }
-                }
-                System.out.println("=== END ROW " + i + " ===\n");
+            for (int i = 0; i < elementsWithFoundations.size(); i++) {
+                WebElement elem = elementsWithFoundations.get(i);
+                System.out.println("Element " + i + ":");
+                System.out.println("  Tag: " + elem.getTagName());
+                System.out.println("  Text: '" + elem.getText() + "'");
+                System.out.println("  Class: '" + elem.getAttribute("class") + "'");
+                System.out.println("  Clickable: " + elem.isEnabled());
+                System.out.println();
             }
 
         } finally {
             driver.quit();
         }
-    }*/
+    }
+
+    public void testClickableElements(String term, String courseCode) throws Exception {
+        WebDriverManager.chromedriver().setup();
+        WebDriver driver = new ChromeDriver(options);
+
+        try {
+            driver.get("https://vsb.mcgill.ca/criteria.jsp");
+            driver.findElement(By.linkText(term)).click();
+            //wait a bit
+            Thread.sleep(2000);
+            WebElement searchBox =  driver.findElement(By.id("code_number"));
+            searchBox.sendKeys(courseCode);
+            searchBox.sendKeys(Keys.ENTER);
+            Thread.sleep(3000);
+
+            System.out.println("=== TESTING DIFFERENT CLICKABLE ELEMENTS ===");
+
+            // Test 1: Try the tooltip "Expand detail" div
+            System.out.println("\n--- Test 1: Clicking 'Expand detail' tooltip ---");
+            try {
+                WebElement expandTooltip = driver.findElement(By.cssSelector("div.cnf_tip_expand"));
+                expandTooltip.click();
+                Thread.sleep(2000);
+
+                // Check how many table rows we have now
+                List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
+                System.out.println("After clicking tooltip: Found " + rows.size() + " table rows");
+
+            } catch (Exception e) {
+                System.out.println("Tooltip click failed: " + e.getMessage());
+            }
+
+            // Test 2: Try clicking the h4 course title
+            System.out.println("\n--- Test 2: Clicking h4 course title ---");
+            try {
+                WebElement courseTitle = driver.findElement(By.cssSelector("h4.course_title"));
+                courseTitle.click();
+                Thread.sleep(2000);
+
+                // Check table rows again
+                List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
+                System.out.println("After clicking h4: Found " + rows.size() + " table rows");
+
+            } catch (Exception e) {
+                System.out.println("H4 click failed: " + e.getMessage());
+            }
+
+            // Test 3: Try clicking the span with course code
+            System.out.println("\n--- Test 3: Clicking span with course code ---");
+            try {
+                WebElement courseSpan = driver
+                        .findElement(By.xpath("//span[@class='nonmobile' and contains(text(), '" + courseCode + "')]"));
+                courseSpan.click();
+                Thread.sleep(2000);
+
+                // Check table rows again
+                List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
+                System.out.println("After clicking span: Found " + rows.size() + " table rows");
+
+            } catch (Exception e) {
+                System.out.println("Span click failed: " + e.getMessage());
+            }
+
+            // Final check: Print all current table content
+            System.out.println("\n=== FINAL TABLE STATE ===");
+            try {
+                List<WebElement> finalRows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
+                System.out.println("Total rows in table: " + finalRows.size());
+
+                for (int i = 0; i < finalRows.size(); i++) {
+                    List<WebElement> crnSpans = finalRows.get(i).findElements(By.cssSelector("span[data-crns]"));
+                    if (!crnSpans.isEmpty()) {
+                        String crn = crnSpans.get(0).getAttribute("data-crns");
+                        WebElement strong = finalRows.get(i).findElement(By.cssSelector("strong"));
+                        String section = strong.getAttribute("innerHTML");
+                        System.out.println("Row " + i + ": CRN=" + crn + ", Section=" + section);
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Error reading final table: " + e.getMessage());
+            }
+
+        } finally {
+            driver.quit();
+        }
+    }
 
     public static void main(String[] args) {
         try {
@@ -219,23 +296,30 @@ public class McGillCourseChecker {
 
             // Run the debug first
             //System.out.println("=== DEBUGGING COMPLETE TABLE STRUCTURE ===");
-            //checker.debugCompleteTableStructure("Fall 2025", "COMP 250");
-            CourseInfo course = checker.checkCourseAvailability("Fall 2025", "COMP 250");
+            //checker.debugCourseTitle("Fall 2025", "COMP 202");
+
+            // Run the clickable elements test
+            System.out.println("=== TESTING CLICKABLE ELEMENTS ===");
+            checker.testClickableElements("Fall 2025", "COMP 202");
+
+            // CourseInfo course = checker.checkCourseAvailability("Fall 2025", "COMP 202");
 
             // Print out all extracted info for verification
-            System.out.println("Course Code: " + course.getCourseCode());
-            System.out.println("Course Name: " + course.getCourseName());
+            // System.out.println("Course Code: " + course.getCourseCode());
+            // System.out.println("Course Name: " + course.getCourseName());
 
-            if (course.getSections() != null && !course.getSections().isEmpty()) {
-                System.out.println("Sections found: " + course.getSections().size());
-                for (SectionInfo section : course.getSections().values()) {
-                    System.out.println("CRN: " + section.getCrn() +
-                            ", Section: " + section.getSectionCode() +
-                            ", Available Seats: " + section.getAvailableSeats());
-                }
-            } else {
-                System.out.println("No sections found or course not available.");
-            }
+            /*
+             * if (course.getSections() != null && !course.getSections().isEmpty()) {
+             * System.out.println("Sections found: " + course.getSections().size());
+             * for (SectionInfo section : course.getSections().values()) {
+             * System.out.println("CRN: " + section.getCrn() +
+             * ", Section: " + section.getSectionCode() +
+             * ", Available Seats: " + section.getAvailableSeats());
+             * }
+             * } else {
+             * System.out.println("No sections found or course not available.");
+             * }
+             */
         } catch (Exception e) {
             System.out.println("Error occurred: " + e.getMessage());
             e.printStackTrace();

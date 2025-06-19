@@ -46,6 +46,10 @@ public class CourseMonitor {
                 courseInfo = courseChecker.checkCourseAvailability(term, courseCode);
                 //loop through all sections
                 for(SectionInfo section : courseInfo.getSections().values()){ //check for each crn/section
+                    if(!shouldMonitorThisSection(section)){
+                        //if we should not monitor this section, continue to the next section
+                        continue;
+                    }
                     String crn = section.getCrn();
                     String currentSeats = section.getAvailableSeats();
 

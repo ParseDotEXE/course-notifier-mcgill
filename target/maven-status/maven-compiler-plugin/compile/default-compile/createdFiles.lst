@@ -1,3 +1,4 @@
+com\vsbnotifier\service\CourseMonitor.class
 com\vsbnotifier\config\TestVSBApi.class
 com\vsbnotifier\model\UserRequest.class
 com\vsbnotifier\model\CourseInfo.class

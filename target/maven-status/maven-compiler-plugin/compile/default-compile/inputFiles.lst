@@ -4,5 +4,6 @@ C:\Users\parsa\Course Notifier\src\main\java\com\vsbnotifier\main\McGillNotifier
 C:\Users\parsa\Course Notifier\src\main\java\com\vsbnotifier\model\CourseInfo.java
 C:\Users\parsa\Course Notifier\src\main\java\com\vsbnotifier\model\SectionInfo.java
 C:\Users\parsa\Course Notifier\src\main\java\com\vsbnotifier\model\UserRequest.java
+C:\Users\parsa\Course Notifier\src\main\java\com\vsbnotifier\service\CourseMonitor.java
 C:\Users\parsa\Course Notifier\src\main\java\com\vsbnotifier\service\McGillCourseChecker.java
 C:\Users\parsa\Course Notifier\src\main\java\com\vsbnotifier\service\TwilioNotifier.java
