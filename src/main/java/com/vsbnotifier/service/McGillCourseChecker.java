@@ -204,85 +204,157 @@ public class McGillCourseChecker {
         }
     }
 
-    public void testClickableElements(String term, String courseCode) throws Exception {
+    public void testDropdownFlow(String term, String courseCode) throws Exception {
         WebDriverManager.chromedriver().setup();
         WebDriver driver = new ChromeDriver(options);
 
         try {
             driver.get("https://vsb.mcgill.ca/criteria.jsp");
             driver.findElement(By.linkText(term)).click();
-            //wait a bit
             Thread.sleep(2000);
-            WebElement searchBox =  driver.findElement(By.id("code_number"));
+
+            WebElement searchBox = driver.findElement(By.id("code_number"));
+            searchBox.clear();
             searchBox.sendKeys(courseCode);
             searchBox.sendKeys(Keys.ENTER);
             Thread.sleep(3000);
 
-            System.out.println("=== TESTING DIFFERENT CLICKABLE ELEMENTS ===");
+            System.out.println("=== LOOKING FOR DROPDOWN ===");
 
-            // Test 1: Try the tooltip "Expand detail" div
-            System.out.println("\n--- Test 1: Clicking 'Expand detail' tooltip ---");
-            try {
-                WebElement expandTooltip = driver.findElement(By.cssSelector("div.cnf_tip_expand"));
-                expandTooltip.click();
-                Thread.sleep(2000);
+            // Step 1: Find and click the "Try all classes (2)" dropdown
+            WebElement dropdown = driver.findElement(
+                    By.xpath("//select[contains(@class, 'form-control') or contains(text(), 'Try all classes')]"));
+            dropdown.click();
+            Thread.sleep(1000);
 
-                // Check how many table rows we have now
-                List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
-                System.out.println("After clicking tooltip: Found " + rows.size() + " table rows");
+            System.out.println("Clicked dropdown, looking for sections...");
 
-            } catch (Exception e) {
-                System.out.println("Tooltip click failed: " + e.getMessage());
+            // Step 2: Check what section options are available
+            List<WebElement> options = driver.findElements(By.tagName("option"));
+            for (WebElement option : options) {
+                System.out.println("Option: " + option.getText());
             }
 
-            // Test 2: Try clicking the h4 course title
-            System.out.println("\n--- Test 2: Clicking h4 course title ---");
-            try {
-                WebElement courseTitle = driver.findElement(By.cssSelector("h4.course_title"));
-                courseTitle.click();
-                Thread.sleep(2000);
+            // Step 3: Click "Generate Schedules"
+            WebElement generateBtn = driver.findElement(By.xpath("//button[contains(text(), 'GENERATE SCHEDULES')]"));
+            generateBtn.click();
+            Thread.sleep(3000);
 
-                // Check table rows again
-                List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
-                System.out.println("After clicking h4: Found " + rows.size() + " table rows");
+            System.out.println("Clicked Generate Schedules, checking table...");
 
-            } catch (Exception e) {
-                System.out.println("H4 click failed: " + e.getMessage());
+            // Step 4: Check the table now
+            List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
+            System.out.println("Found " + rows.size() + " table rows after Generate Schedules");
+
+        } finally {
+            driver.quit();
+        }
+    }
+
+    public void debugDropdown(String term, String courseCode) throws Exception {
+        WebDriverManager.chromedriver().setup();
+        WebDriver driver = new ChromeDriver(options);
+
+        try {
+            driver.get("https://vsb.mcgill.ca/criteria.jsp");
+            driver.findElement(By.linkText(term)).click();
+            Thread.sleep(2000);
+
+            WebElement searchBox = driver.findElement(By.id("code_number"));
+            searchBox.clear();
+            searchBox.sendKeys(courseCode);
+            searchBox.sendKeys(Keys.ENTER);
+            Thread.sleep(3000);
+
+            System.out.println("=== SEARCHING FOR DROPDOWN ELEMENTS ===");
+
+            // Search for ANY element containing "Try all classes"
+            List<WebElement> dropdownElements = driver
+                    .findElements(By.xpath("//*[contains(text(), 'Try all classes')]"));
+            System.out.println("Found " + dropdownElements.size() + " elements containing 'Try all classes':");
+
+            for (int i = 0; i < dropdownElements.size(); i++) {
+                WebElement elem = dropdownElements.get(i);
+                System.out.println("Element " + i + ":");
+                System.out.println("  Tag: " + elem.getTagName());
+                System.out.println("  Text: '" + elem.getText() + "'");
+                System.out.println("  Class: '" + elem.getAttribute("class") + "'");
+                System.out.println("  HTML: " + elem.getAttribute("outerHTML"));
             }
 
-            // Test 3: Try clicking the span with course code
-            System.out.println("\n--- Test 3: Clicking span with course code ---");
+        } finally {
+            driver.quit();
+        }
+    }
+
+    public void testSelectDropdown(String term, String courseCode) throws Exception {
+        WebDriverManager.chromedriver().setup();
+        WebDriver driver = new ChromeDriver(options);
+
+        try {
+            driver.get("https://vsb.mcgill.ca/criteria.jsp");
+            driver.findElement(By.linkText(term)).click();
+            Thread.sleep(2000);
+
+            WebElement searchBox = driver.findElement(By.id("code_number"));
+            searchBox.clear();
+            searchBox.sendKeys(courseCode);
+            searchBox.sendKeys(Keys.ENTER);
+            Thread.sleep(3000);
+
+            System.out.println("=== TESTING SELECT DROPDOWN ===");
+
             try {
-                WebElement courseSpan = driver
-                        .findElement(By.xpath("//span[@class='nonmobile' and contains(text(), '" + courseCode + "')]"));
-                courseSpan.click();
+                // Find the select element that contains these options
+                WebElement selectElement = driver
+                        .findElement(By.xpath("//select[.//option[contains(text(), 'Try all classes')]]"));
+                System.out.println("Found select element: " + selectElement.getTagName());
+
+                // Click the select to open dropdown
+                selectElement.click();
+                Thread.sleep(1000);
+                System.out.println("Clicked select dropdown");
+
+                // Find and click the "Try all classes (2)" option
+                WebElement option = driver.findElement(By.xpath("//option[contains(text(), 'Try all classes (2)')]"));
+                option.click();
+                System.out.println("Selected 'Try all classes (2)' option");
+
                 Thread.sleep(2000);
 
-                // Check table rows again
-                List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
-                System.out.println("After clicking span: Found " + rows.size() + " table rows");
+                // Now look for Generate Schedules button
+                try {
+                    WebElement generateBtn = driver
+                            .findElement(By.xpath("//button[contains(text(), 'GENERATE SCHEDULES')]"));
+                    generateBtn.click();
+                    System.out.println("Clicked Generate Schedules button");
+                    Thread.sleep(3000);
 
-            } catch (Exception e) {
-                System.out.println("Span click failed: " + e.getMessage());
-            }
+                    // Check the table now for multiple sections
+                    List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
+                    System.out.println("Found " + rows.size() + " table rows after Generate Schedules");
 
-            // Final check: Print all current table content
-            System.out.println("\n=== FINAL TABLE STATE ===");
-            try {
-                List<WebElement> finalRows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
-                System.out.println("Total rows in table: " + finalRows.size());
-
-                for (int i = 0; i < finalRows.size(); i++) {
-                    List<WebElement> crnSpans = finalRows.get(i).findElements(By.cssSelector("span[data-crns]"));
-                    if (!crnSpans.isEmpty()) {
-                        String crn = crnSpans.get(0).getAttribute("data-crns");
-                        WebElement strong = finalRows.get(i).findElement(By.cssSelector("strong"));
-                        String section = strong.getAttribute("innerHTML");
-                        System.out.println("Row " + i + ": CRN=" + crn + ", Section=" + section);
+                    // Check each row for section data
+                    for (int i = 0; i < rows.size(); i++) {
+                        List<WebElement> crnSpans = rows.get(i).findElements(By.cssSelector("span[data-crns]"));
+                        if (!crnSpans.isEmpty()) {
+                            String crn = crnSpans.get(0).getAttribute("data-crns");
+                            try {
+                                WebElement strong = rows.get(i).findElement(By.cssSelector("strong"));
+                                String section = strong.getAttribute("innerHTML");
+                                System.out.println("Row " + i + ": CRN=" + crn + ", Section=" + section);
+                            } catch (Exception e) {
+                                System.out.println("Row " + i + ": CRN=" + crn + ", Section=could not extract");
+                            }
+                        }
                     }
+
+                } catch (Exception e) {
+                    System.out.println("Could not find or click Generate Schedules: " + e.getMessage());
                 }
+
             } catch (Exception e) {
-                System.out.println("Error reading final table: " + e.getMessage());
+                System.out.println("Error with dropdown: " + e.getMessage());
             }
 
         } finally {
@@ -294,13 +366,17 @@ public class McGillCourseChecker {
         try {
             McGillCourseChecker checker = new McGillCourseChecker();
 
-            // Run the debug first
-            //System.out.println("=== DEBUGGING COMPLETE TABLE STRUCTURE ===");
-            //checker.debugCourseTitle("Fall 2025", "COMP 202");
+            // Run the dropdown flow test
+            // System.out.println("=== TESTING DROPDOWN FLOW ===");
+            // checker.testDropdownFlow("Fall 2025", "COMP 202");
 
-            // Run the clickable elements test
-            System.out.println("=== TESTING CLICKABLE ELEMENTS ===");
-            checker.testClickableElements("Fall 2025", "COMP 202");
+            // Run the debug dropdown test
+            System.out.println("=== DEBUGGING DROPDOWN ELEMENTS ===");
+            checker.debugDropdown("Fall 2025", "COMP 202");
+
+            //run the test to select dropdown
+            System.out.println("=== TESTING SELECT DROPDOWN ===");
+            checker.testSelectDropdown("Fall 2025", "COMP 202");
 
             // CourseInfo course = checker.checkCourseAvailability("Fall 2025", "COMP 202");
 
