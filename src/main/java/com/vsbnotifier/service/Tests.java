@@ -1,4 +1,4 @@
-package com.vsbnotifier.service;
+/*package com.vsbnotifier.service;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ import org.openqa.selenium.support.ui.Select;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 public class Tests {
-
+    
     public void debugCourseTitle(String term, String courseCode) throws Exception {
         WebDriverManager.chromedriver().setup();
         WebDriver driver = new ChromeDriver(options);
@@ -856,4 +856,4 @@ public class Tests {
             System.out.println("Error checking table: " + e.getMessage());
         }
     }
-}
+}*/

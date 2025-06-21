@@ -312,8 +312,8 @@ public class McGillCourseChecker {
             //System.out.println("=== TESTING INDIVIDUAL SECTIONS ===");
             //checker.testIndividualSections("Fall 2025", "COMP 202");
             // Run the debug seat info test
-            System.out.println("=== DEBUGGING SEAT INFO ===");
-            checker.debugSeatInfo("Fall 2025", "COMP 202");
+            //System.out.println("=== DEBUGGING SEAT INFO ===");
+            //checker.debugSeatInfo("Fall 2025", "COMP 202");
             // run the test to select dropdown
             // System.out.println("=== TESTING SELECT DROPDOWN ===");
             // checker.testSelectDropdown("Fall 2025", "COMP 202");
