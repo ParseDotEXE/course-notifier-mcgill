@@ -2,7 +2,6 @@ package com.vsbnotifier.service;
 
 import java.util.concurrent.*;
 import java.util.*;
-import java.io.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.vsbnotifier.model.CourseInfo;

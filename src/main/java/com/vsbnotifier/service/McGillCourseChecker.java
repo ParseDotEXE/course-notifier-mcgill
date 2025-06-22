@@ -13,7 +13,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.Select;
 
-import com.vsbnotifier.model.CourseInfo;
 
 
 import com.vsbnotifier.model.CourseInfo; //import the CourseInfo model
