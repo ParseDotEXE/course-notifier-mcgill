@@ -14,7 +14,7 @@ public class CourseMonitor {
     private Map<String, String> previousSeatCounts;
     private ScheduledExecutorService executorService;
     private McGillCourseChecker courseChecker;
-    private static final int checkInterval = 90; // a minute and a half in seconds
+    private static final int checkInterval = 45; // 45 seconds
     private String term;
     private String courseCode;
     private String section;
