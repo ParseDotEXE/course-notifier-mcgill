@@ -14,7 +14,7 @@ public class CourseMonitor {
     private Map<String, String> previousSeatCounts;
     private ScheduledExecutorService executorService;
     private McGillCourseChecker courseChecker;
-    private static final int checkInterval = 2 * 60; // 2 minutes in seconds
+    private static final int checkInterval = 90; // a minute and a half in seconds
     private String term;
     private String courseCode;
     private String section;
@@ -63,7 +63,7 @@ public class CourseMonitor {
                             continue;
                         }else{
                             //check if the current seats are available
-                            if(!(currentSeats.equals("0") || currentSeats.equals("Full"))){
+                            if(previousSeatCounts.get(crn).equals("Waitlist") && !currentSeats.equals("Waitlist")){
                                 //seats became available, alert the user
                                 //TODO: implement alert logic
                                 
@@ -71,9 +71,8 @@ public class CourseMonitor {
                                 executorService.shutdown();
                                 return;
                             }
+                            previousSeatCounts.put(crn, currentSeats);
                         }
-                        //update the previousSeatCounts map with the current seats
-                        previousSeatCounts.put(crn, currentSeats);
                     }else{
                         //add to the previousSeatCounts map
                         previousSeatCounts.put(crn, currentSeats);
@@ -87,25 +86,25 @@ public class CourseMonitor {
         }, 0, checkInterval, SECONDS);
     }
     //helper to filter sections based on the desired section
-    public boolean shouldMonitorThisSection(SectionInfo sectionInfo){
+    public boolean shouldMonitorThisSection(SectionInfo sectionInfo) {
         //case 1: monitor all sections
         if (this.section.equals("any")){
             return true; //monitor all sections
         //case 2: monitor specific sections (Lec 001)
-        }else if(this.section.equals("Lec 001")){
-            if(sectionInfo.getSectionCode().equals("Lec 001")){
-                return true; //monitor only Lec 001
-            }else{
-                return false; //do not monitor other sections
-            }
-        //case 3: monitor specific sections (Lec 002)   
-        }else if(this.section.equals("Lec 002")){
-            if(sectionInfo.getSectionCode().equals("Lec 002")){
-                return true; //monitor only Lec 002
-            }else{
-                return false; //do not monitor other sections
-            }
         }
-        return false; //default case, do not monitor any sections
+        if(this.section.equals(sectionInfo.getSectionCode())) {
+            return true; //monitor this section
+        }
+        return false; //do not monitor this section
+    }
+    public static void main(String[] args){
+        try{
+            //create courseMonitor instance
+            CourseMonitor cm = new CourseMonitor("Fall 2025", "MATH 240", "Lec 001");
+            //start monitoring
+            cm.startPeriodicCheck();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
