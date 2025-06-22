@@ -1,36 +1,24 @@
 package com.vsbnotifier.service;
 
 //add necessary imports
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.vsbnotifier.model.CourseInfo;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+
 
 import com.vsbnotifier.model.CourseInfo; //import the CourseInfo model
 import com.vsbnotifier.model.SectionInfo; //import the SectionInfo model
 import io.github.bonigarcia.wdm.WebDriverManager; //webdrivermanager import
-import org.w3c.dom.*;
-import javax.xml.parsers.*;
-import java.io.*;
-import org.xml.sax.SAXException;
-
-import java.time.Duration;
 
 public class McGillCourseChecker {
     ChromeOptions options = new ChromeOptions(); // to set up the ChromeDriver options
@@ -45,14 +33,14 @@ public class McGillCourseChecker {
 
             // click on the correct term
             driver.findElement(By.linkText(term)).click();
-            Thread.sleep(2000);
+            Thread.sleep(1500);
 
             // click on the box to select the course
             WebElement searchBox = driver.findElement(By.id("code_number"));
             searchBox.clear();
             searchBox.sendKeys(courseCode);
             searchBox.sendKeys(Keys.ENTER);
-            Thread.sleep(3000); // give the page time to load results
+            Thread.sleep(1500); // give the page time to load results
 
             // extract the course information
             try {
@@ -74,7 +62,7 @@ public class McGillCourseChecker {
                 List<WebElement> allSelects = driver.findElements(By.tagName("select"));
                 System.out.println("Found " + allSelects.size() + " total select elements");
 
-                Select dropdown = null; //to see if its a dropdown or just one section
+                Select dropdown = null; // to see if its a dropdown or just one section
 
                 // Find the correct dropdown that contains course section options
                 for (int i = 0; i < allSelects.size(); i++) {
@@ -138,7 +126,6 @@ public class McGillCourseChecker {
                                 } catch (Exception e) {
                                     // Fallback logic
                                     try {
-                                        WebElement fullElement = element.findElement(By.cssSelector("span.fullText"));
                                         seatStatus = "Full";
                                     } catch (Exception e2) {
                                         String dataColor = crnSpans.get(0).getAttribute("data-color");
@@ -182,7 +169,7 @@ public class McGillCourseChecker {
                             try {
                                 // Select this specific section
                                 dropdown.selectByValue(optionValue);
-                                Thread.sleep(2000);
+                                Thread.sleep(1250);
 
                                 // Extract data from the current page
                                 List<WebElement> rows = driver.findElements(By.cssSelector(".inner_legend_table tr"));
@@ -209,8 +196,13 @@ public class McGillCourseChecker {
                                                 seatStatus = "Full";
                                             } else {
                                                 String dataColor = crnSpans.get(0).getAttribute("data-color");
-                                                seatStatus = "red".equals(dataColor) ? "Full"
-                                                        : "green".equals(dataColor) ? "Available" : "Unknown";
+                                                if ("red".equals(dataColor)) {
+                                                    seatStatus = "Full";
+                                                } else if ("green".equals(dataColor)) {
+                                                    seatStatus = "Available";
+                                                } else {
+                                                    seatStatus = "Unknown";
+                                                }
                                             }
                                         }
 
@@ -242,7 +234,7 @@ public class McGillCourseChecker {
             }
 
         } finally {
-            // Always close the driver
+            // close the driver
             if (driver != null) {
                 driver.quit();
             }
@@ -250,12 +242,13 @@ public class McGillCourseChecker {
 
         return courseInfo; // return the course info object
     }
-    public static void main(String[] args){
-        
-        //test it
+
+    public static void main(String[] args) {
+
+        // test it
         McGillCourseChecker checker = new McGillCourseChecker();
         try {
-            CourseInfo course = checker.checkCourseAvailability("Fall 2025", "COMP 370");
+            CourseInfo course = checker.checkCourseAvailability("Winter 2026", "COMP 202");
             System.out.println("Sections found: " + course.getSections().size());
         } catch (Exception e) {
             e.printStackTrace();
