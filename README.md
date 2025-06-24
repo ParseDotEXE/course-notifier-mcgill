@@ -23,8 +23,8 @@ This project uses Selenium to automate a browser, check course availability on M
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/mcgill-vsb-notifier.git
-   cd mcgill-vsb-notifier
+   git clone https://github.com/ParseDotEXE/course-notifier-mcgill.git
+   cd course-notifier-mcgill
    ```
 
 2. **Install dependencies**
@@ -45,8 +45,9 @@ This project uses Selenium to automate a browser, check course availability on M
 ## 🚀 Usage
 
 Run the main class:
-```bash
-java -cp <your_classpath> com.vsbnotifier.main.McGillNotifier
+```bash (with maven)
+mvn clean compile
+mvn exec:java -Dexec.mainClass="com.vsbnotifier.main.McGillNotifier"
 ```
 
 The program will:
@@ -59,7 +60,7 @@ The program will:
 
 This is a personal project for private use only.
 
-Project Link: [https://github.com/yourusername/mcgill-vsb-notifier](https://github.com/yourusername/mcgill-vsb-notifier)
+Project Link: https://github.com/ParseDotEXE/course-notifier-mcgill.git
 
 ---
 
